@@ -41,6 +41,20 @@ public class Calculator extends JFrame implements ActionListener {
 
         add(buttonPanel, BorderLayout.CENTER);
 
+        // Menu Bar
+        JMenuBar menuBar = new JMenuBar();
+        JMenu menu = new JMenu("Options");
+        JMenuItem historyItem = new JMenuItem("View History");
+        JMenuItem exitItem = new JMenuItem("Exit");
+
+        historyItem.addActionListener(this);
+        exitItem.addActionListener(this);
+
+        menu.add(historyItem);
+        menu.add(exitItem);
+        menuBar.add(menu);
+        setJMenuBar(menuBar);
+
         // Make the frame visible
         setVisible(true);
     }
@@ -67,6 +81,10 @@ public class Calculator extends JFrame implements ActionListener {
         } else if ("C".equals(command)) {
             display.setText("");
             num1 = num2 = operator = "";
+        } else if ("View History".equals(command)) {
+            viewHistory();
+        } else if ("Exit".equals(command)) {
+            System.exit(0);
         }
     }
 
@@ -91,6 +109,19 @@ public class Calculator extends JFrame implements ActionListener {
             writer.write(num1 + " " + operator + " " + num2 + " = " + result + "\n");
         } catch (IOException e) {
             System.out.println("Error saving history: " + e.getMessage());
+        }
+    }
+
+    private void viewHistory() {
+        try (BufferedReader reader = new BufferedReader(new FileReader("calculator_history.txt"))) {
+            StringBuilder history = new StringBuilder();
+            String line;
+            while ((line = reader.readLine()) != null) {
+                history.append(line).append("\n");
+            }
+            JOptionPane.showMessageDialog(this, history.toString(), "Calculation History", JOptionPane.INFORMATION_MESSAGE);
+        } catch (IOException e) {
+            JOptionPane.showMessageDialog(this, "No history found.", "Calculation History", JOptionPane.INFORMATION_MESSAGE);
         }
     }
 
