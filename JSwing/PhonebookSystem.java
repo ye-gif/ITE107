@@ -1,165 +1,244 @@
 import javax.swing.*;
+import javax.swing.table.DefaultTableModel;
 import java.awt.*;
-import java.awt.event.*;
+import java.awt.event.ActionEvent;
+import java.awt.event.ActionListener;
 import java.io.*;
-import java.util.HashMap;
-import java.util.Map;
+import java.util.Vector;
 
-public class Phonebook extends JFrame implements ActionListener {
-    private JTextField nameField, phoneField, searchField;
-    private JTextArea displayArea;
-    private HashMap<String, String> contacts;
+public class PhonebookSystem {
+    private DefaultTableModel tableModel;
+    private JTable contactTable;
+    private JTextField firstNameField, lastNameField, locationField, phoneField;
 
-    public Phonebook() {
-        // Initialize the phonebook
-        contacts = new HashMap<>();
+    public static void main(String[] args) {
+        SwingUtilities.invokeLater(() -> new PhonebookSystem().createAndShowGUI());
+    }
 
-        // Set up the JFrame
-        setTitle("Phonebook");
-        setSize(500, 500);
-        setDefaultCloseOperation(EXIT_ON_CLOSE);
-        setLayout(new BorderLayout());
+    public void createAndShowGUI() {
+        // main frame
+        JFrame frame = new JFrame("PHONE BOOK");
+        frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
+        frame.setSize(800, 600);
+        frame.setLayout(null);
+        frame.getContentPane().setBackground(new Color(199, 170, 180)); // for background color
 
-        // Top panel for adding contacts
-        JPanel addPanel = new JPanel(new GridLayout(3, 2));
-        addPanel.setBorder(BorderFactory.createTitledBorder("Add Contact"));
-        addPanel.add(new JLabel("Name:"));
-        nameField = new JTextField();
-        addPanel.add(nameField);
-        addPanel.add(new JLabel("Phone:"));
+        // title label
+        JLabel titleLabel = new JLabel("PHONE BOOK");
+        titleLabel.setFont(new Font("Arial", Font.BOLD, 24));
+        titleLabel.setForeground(Color.WHITE); // for text color
+        titleLabel.setHorizontalAlignment(SwingConstants.CENTER);
+        titleLabel.setBounds(300, 10, 200, 40);
+        frame.add(titleLabel);
+
+        // search section
+        JLabel searchLabel = new JLabel("Search:");
+        searchLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        searchLabel.setForeground(Color.WHITE); // text color
+        searchLabel.setBounds(20, 60, 60, 25);
+        frame.add(searchLabel);
+
+        JTextField searchField = new JTextField();
+        searchField.setBounds(80, 60, 200, 25);
+        frame.add(searchField);
+
+        // table section
+        String[] columnNames = {"FIRSTNAME", "LASTNAME", "LOCATION", "PHONE"};
+        tableModel = new DefaultTableModel(columnNames, 0);
+        contactTable = new JTable(tableModel);
+        contactTable.setBackground(Color.WHITE); // table background color
+        contactTable.setForeground(Color.DARK_GRAY); // table text color
+        contactTable.setGridColor(Color.LIGHT_GRAY); // grid line color
+        contactTable.setSelectionBackground(new Color(100, 100, 100)); // selection background rgb color
+        JScrollPane tableScrollPane = new JScrollPane(contactTable);
+        tableScrollPane.setBounds(20, 100, 500, 400);
+        frame.add(tableScrollPane);
+
+        // for load existing contacts from file
+        loadContactsFromFile();
+
+        // for enter contact details section
+        JLabel detailsLabel = new JLabel("Enter Contact Details");
+        detailsLabel.setFont(new Font("Arial", Font.BOLD, 14));
+        detailsLabel.setForeground(Color.WHITE); // Set text color
+        detailsLabel.setBounds(540, 100, 200, 25);
+        frame.add(detailsLabel);
+
+        JLabel firstNameLabel = new JLabel("First Name:");
+        firstNameLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        firstNameLabel.setForeground(Color.WHITE); // text color
+        firstNameLabel.setBounds(540, 140, 100, 25);
+        frame.add(firstNameLabel);
+
+        firstNameField = new JTextField();
+        firstNameField.setBounds(640, 140, 120, 25);
+        frame.add(firstNameField);
+
+        JLabel lastNameLabel = new JLabel("Last Name:");
+        lastNameLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        lastNameLabel.setForeground(Color.WHITE); // text color
+        lastNameLabel.setBounds(540, 180, 100, 25);
+        frame.add(lastNameLabel);
+
+        lastNameField = new JTextField();
+        lastNameField.setBounds(640, 180, 120, 25);
+        frame.add(lastNameField);
+
+        JLabel locationLabel = new JLabel("Location:");
+        locationLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        locationLabel.setForeground(Color.WHITE); // text color
+        locationLabel.setBounds(540, 220, 100, 25);
+        frame.add(locationLabel);
+
+        locationField = new JTextField();
+        locationField.setBounds(640, 220, 120, 25);
+        frame.add(locationField);
+
+        JLabel phoneLabel = new JLabel("Phone:");
+        phoneLabel.setFont(new Font("Arial", Font.PLAIN, 14));
+        phoneLabel.setForeground(Color.WHITE); // text color
+        phoneLabel.setBounds(540, 260, 100, 25);
+        frame.add(phoneLabel);
+
         phoneField = new JTextField();
-        addPanel.add(phoneField);
-        JButton addButton = new JButton("Add Contact");
-        addButton.addActionListener(this);
-        addPanel.add(addButton);
+        phoneField.setBounds(640, 260, 120, 25);
+        frame.add(phoneField);
 
-        // Center panel for displaying contacts
-        JPanel displayPanel = new JPanel(new BorderLayout());
-        displayPanel.setBorder(BorderFactory.createTitledBorder("Contacts"));
-        displayArea = new JTextArea();
-        displayArea.setEditable(false);
-        JScrollPane scrollPane = new JScrollPane(displayArea);
-        displayPanel.add(scrollPane);
+        // buttons section
+        JButton addButton = new JButton("Add");
+        addButton.setBackground(Color.BLUE);
+        addButton.setForeground(Color.BLACK);
+        addButton.setBounds(540, 320, 100, 30);
+        frame.add(addButton);
 
-        // Bottom panel for actions
-        JPanel actionPanel = new JPanel(new GridLayout(2, 1));
+        JButton updateButton = new JButton("Update");
+        updateButton.setBackground(Color.PINK);
+        updateButton.setForeground(Color.BLACK);
+        updateButton.setBounds(650, 320, 110, 30);
+        frame.add(updateButton);
 
-        // Search and Delete Panel
-        JPanel searchDeletePanel = new JPanel(new GridLayout(1, 3));
-        searchDeletePanel.setBorder(BorderFactory.createTitledBorder("Search/Delete Contact"));
-        searchField = new JTextField();
-        searchDeletePanel.add(searchField);
-        JButton searchButton = new JButton("Search");
-        searchButton.addActionListener(this);
-        searchDeletePanel.add(searchButton);
         JButton deleteButton = new JButton("Delete");
-        deleteButton.addActionListener(this);
-        searchDeletePanel.add(deleteButton);
+        deleteButton.setBackground(Color.RED);
+        deleteButton.setForeground(Color.WHITE);
+        deleteButton.setBounds(540, 360, 100, 30);
+        frame.add(deleteButton);
 
-        // Save and Load Panel
-        JPanel filePanel = new JPanel(new GridLayout(1, 2));
-        JButton saveButton = new JButton("Save to File");
-        saveButton.addActionListener(this);
-        filePanel.add(saveButton);
-        JButton loadButton = new JButton("Load from File");
-        loadButton.addActionListener(this);
-        filePanel.add(loadButton);
+        JButton clearButton = new JButton("CLEAR");
+        clearButton.setBackground(Color.CYAN);
+        clearButton.setForeground(Color.BLACK);
+        clearButton.setBounds(650, 360, 100, 30);
+        frame.add(clearButton);
 
-        actionPanel.add(searchDeletePanel);
-        actionPanel.add(filePanel);
+        // add button 
+        addButton.addActionListener(e -> addContact());
 
-        // Add panels to frame
-        add(addPanel, BorderLayout.NORTH);
-        add(displayPanel, BorderLayout.CENTER);
-        add(actionPanel, BorderLayout.SOUTH);
+        // update button 
+        updateButton.addActionListener(e -> editContact());
 
-        // Make the frame visible
-        setVisible(true);
+        // delete button 
+        deleteButton.addActionListener(e -> deleteContact());
+
+        // clear button 
+        clearButton.addActionListener(e -> clearFields());
+
+        // search button
+        searchField.addActionListener(e -> searchContact(searchField.getText()));
+
+        // show frame
+        frame.setVisible(true);
     }
 
-    @Override
-    public void actionPerformed(ActionEvent e) {
-        String command = e.getActionCommand();
+    private void addContact() {
+        String firstName = firstNameField.getText();
+        String lastName = lastNameField.getText();
+        String location = locationField.getText();
+        String phone = phoneField.getText();
 
-        if (command.equals("Add Contact")) {
-            String name = nameField.getText().trim();
-            String phone = phoneField.getText().trim();
-            if (name.isEmpty() || phone.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Name and Phone fields cannot be empty.");
-                return;
-            }
-            contacts.put(name, phone);
-            displayContacts();
-            nameField.setText("");
-            phoneField.setText("");
-        } else if (command.equals("Search")) {
-            String name = searchField.getText().trim();
-            if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Enter a name to search.");
-                return;
-            }
-            String phone = contacts.get(name);
-            if (phone != null) {
-                JOptionPane.showMessageDialog(this, name + ": " + phone);
-            } else {
-                JOptionPane.showMessageDialog(this, "Contact not found.");
-            }
-        } else if (command.equals("Delete")) {
-            String name = searchField.getText().trim();
-            if (name.isEmpty()) {
-                JOptionPane.showMessageDialog(this, "Enter a name to delete.");
-                return;
-            }
-            if (contacts.remove(name) != null) {
-                JOptionPane.showMessageDialog(this, "Contact deleted.");
-            } else {
-                JOptionPane.showMessageDialog(this, "Contact not found.");
-            }
-            displayContacts();
-        } else if (command.equals("Save to File")) {
-            saveContactsToFile();
-        } else if (command.equals("Load from File")) {
-            loadContactsFromFile();
-            displayContacts();
+        if (firstName.isEmpty() || lastName.isEmpty() || location.isEmpty() || phone.isEmpty()) {
+            JOptionPane.showMessageDialog(null, "Please fill in all fields.");
+            return;
         }
+
+        tableModel.addRow(new Object[]{firstName, lastName, location, phone});
+        saveContactsToFile();
+        clearFields();
     }
 
-    private void displayContacts() {
-        displayArea.setText(""); // Clear the display area
-        for (Map.Entry<String, String> entry : contacts.entrySet()) {
-            displayArea.append(entry.getKey() + ": " + entry.getValue() + "\n");
+    private void editContact() {
+        int selectedRow = contactTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Please select a contact to edit.");
+            return;
         }
+
+        tableModel.setValueAt(firstNameField.getText(), selectedRow, 0);
+        tableModel.setValueAt(lastNameField.getText(), selectedRow, 1);
+        tableModel.setValueAt(locationField.getText(), selectedRow, 2);
+        tableModel.setValueAt(phoneField.getText(), selectedRow, 3);
+
+        saveContactsToFile();
+        clearFields();
+    }
+
+    private void deleteContact() {
+        int selectedRow = contactTable.getSelectedRow();
+        if (selectedRow == -1) {
+            JOptionPane.showMessageDialog(null, "Please select a contact to delete.");
+            return;
+        }
+
+        tableModel.removeRow(selectedRow);
+        saveContactsToFile();
+        clearFields();
+    }
+
+    private void clearFields() {
+        firstNameField.setText("");
+        lastNameField.setText("");
+        locationField.setText("");
+        phoneField.setText("");
+    }
+	// This is to ensure that the search funtions correctly regardless of wether the input is in uppercase, lowercase, or a combination of both.
+    private void searchContact(String query) {
+		String lowerCaseQuery = query.toLowerCase();
+
+		for (int i = 0; i < tableModel.getRowCount(); i++) {
+			String firstName = ((String) tableModel.getValueAt(i, 0)).toLowerCase();
+			String lastName = ((String) tableModel.getValueAt(i, 1)).toLowerCase();
+			String location = ((String) tableModel.getValueAt(i, 2)).toLowerCase();
+			String phone = ((String) tableModel.getValueAt(i, 3)).toLowerCase();
+
+        if (firstName.contains(lowerCaseQuery) || 
+            lastName.contains(lowerCaseQuery) || 
+            location.contains(lowerCaseQuery) || 
+            phone.contains(lowerCaseQuery)) {
+            contactTable.setRowSelectionInterval(i, i);
+            return;
+        }
+    }
+        JOptionPane.showMessageDialog(null, "Contact not found.");
     }
 
     private void saveContactsToFile() {
-        try (BufferedWriter writer = new BufferedWriter(new FileWriter("phonebook.txt"))) {
-            for (Map.Entry<String, String> entry : contacts.entrySet()) {
-                writer.write(entry.getKey() + "," + entry.getValue());
+        try (BufferedWriter writer = new BufferedWriter(new FileWriter("contacts.txt"))) {
+            for (int i = 0; i < tableModel.getRowCount(); i++) {
+                Vector<?> row = tableModel.getDataVector().elementAt(i);
+                writer.write(String.join(",", row.stream().map(Object::toString).toArray(String[]::new)));
                 writer.newLine();
             }
-            JOptionPane.showMessageDialog(this, "Contacts saved to phonebook.txt");
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error saving to file: " + e.getMessage());
+            e.printStackTrace();
         }
     }
 
     private void loadContactsFromFile() {
-        try (BufferedReader reader = new BufferedReader(new FileReader("phonebook.txt"))) {
-            contacts.clear();
+        try (BufferedReader reader = new BufferedReader(new FileReader("contacts.txt"))) {
             String line;
             while ((line = reader.readLine()) != null) {
-                String[] parts = line.split(",", 2);
-                if (parts.length == 2) {
-                    contacts.put(parts[0], parts[1]);
-                }
+                tableModel.addRow(line.split(","));
             }
-            JOptionPane.showMessageDialog(this, "Contacts loaded from phonebook.txt");
         } catch (IOException e) {
-            JOptionPane.showMessageDialog(this, "Error loading from file: " + e.getMessage());
+            // file might not exist yet; this is fine.
         }
-    }
-
-    public static void main(String[] args) {
-        new Phonebook();
     }
 }
