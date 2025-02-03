@@ -20,7 +20,7 @@ public class PayrollSystem extends JFrame {
         setSize(900, 500);
         setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         setLayout(null);
-        getContentPane().setBackground(new Color(152, 122, 172)); // background rgb color purple
+        getContentPane().setBackground(new Color(195, 110, 132)); // background
 
         // title label
         JLabel lblTitle = new JLabel("Payroll System");
@@ -91,7 +91,7 @@ public class PayrollSystem extends JFrame {
         JButton button = new JButton(text);
         button.setFont(new Font("Arial", Font.BOLD, 12));
         button.setBounds(x, y, 130, 30);
-        button.setBackground(new Color(119, 221, 191)); // light green
+        button.setBackground(new Color(110, 220, 195)); // light green
         button.setFocusPainted(false);
         add(button);
         return button;
